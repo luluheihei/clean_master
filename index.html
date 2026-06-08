@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>청소의 지존 되기 - 정통 스크롤 웹툰</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@300;400;700;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #000000;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+        
+        .manhwa-title {
+            font-family: 'Cinzel', 'Nanum Myeongjo', serif;
+        }
+
+        .effect-sound {
+            font-family: 'Nanum Myeongjo', serif;
+            font-weight: 900;
+            text-shadow: 
+                -3px -3px 0 #000,  
+                 3px -3px 0 #000,
+                -3px  3px 0 #000,
+                 3px  3px 0 #000,
+                 0px  5px 10px rgba(0,0,0,0.8);
+            letter-spacing: -0.05em;
+        }
+
+        /* 말풍선 기본 스타일 */
+        .speech-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.98);
+            color: #000000;
+            border: 3px solid #000000;
+            border-radius: 24px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.4);
+            max-width: 240px;
+            z-index: 30;
+            transition: transform 0.2s ease;
+        }
+
+        .speech-bubble:hover {
+            transform: scale(1.03);
+        }
+
+        /* 말풍선 꼬리표 */
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            border-style: solid;
+            display: block;
+            width: 0;
+            z-index: 29;
+        }
+
+        .bubble-tail-bottom::after {
+            bottom: -16px;
+            left: 30px;
+            border-width: 16px 12px 0 0;
+            border-color: #000000 transparent transparent transparent;
+        }
+
+        .bubble-tail-top::after {
+            top: -16px;
+            left: 30px;
+            border-width: 0 12px 16px 0;
+            border-color: transparent #000000 transparent transparent;
+        }
+
+        /* 최반장 사자후 전용 말풍선 */
+        .bubble-choi {
+            background: #111827;
+            color: #fca5a5;
+            border: 3px solid #ef4444;
+            box-shadow: 8px 8px 0px rgba(239, 68, 68, 0.3);
+        }
+
+        .bubble-choi.bubble-tail-bottom::after {
+            border-color: #ef4444 transparent transparent transparent;
+        }
+
+        .bubble-choi.bubble-tail-top::after {
+            border-color: transparent #ef4444 transparent transparent;
+        }
+
+        /* 나레이션 박스 */
+        .narration-box {
+            background: rgba(10, 15, 30, 0.9);
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 컷 간 그라데이션 여백 */
+        .cut-gap {
+            height: 160px;
+            background: linear-gradient(to bottom, #000000, #0a0f1d 50%, #000000);
+            position: relative;
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e3a8a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+    </style>
+</head>
+<body class="selection:bg-red-600 selection:text-white">
+
+    <!-- 글로벌 제어 상단 바 -->
+    <header class="sticky top-0 z-50 bg-black/90 border-b border-gray-900 px-4 py-3 flex justify-between items-center backdrop-blur-md">
+        <div class="flex items-center space-x-3">
+            <span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded tracking-wider">IMAGEN 4.0 AUTO-DRAW</span>
+            <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-1.5 manhwa-title">
+                청소의 지존 되기 <span class="text-xs text-blue-500 font-normal">웹툰 에디션</span>
+            </h1>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <!-- 사운드 토글 -->
+            <button id="sound-btn" onclick="toggleSound()" class="text-gray-400 hover:text-white text-sm p-2 transition">
+                <i class="fa-solid fa-volume-high text-green-500" id="sound-icon"></i>
+            </button>
+            <!-- AI 일괄 그리기 버튼 -->
+            <button id="global-gen-btn" onclick="startGlobalGeneration()" class="bg-gradient-to-r from-red-700 to-blue-700 hover:from-red-600 hover:to-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 transition duration-300 transform active:scale-95">
+                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> AI 실시간 전편 작화 시작
+            </button>
+        </div>
+    </header>
+
+    <!-- 에피소드 네비게이션 퀵바 -->
+    <nav class="bg-slate-950 border-b border-gray-900 overflow-x-auto py-3 px-4 flex space-x-3 text-xs scrollbar-none sticky top-[53px] z-40">
+        <button onclick="scrollToEpisode('ep1')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">1화: 위장 잠입</button>
+        <button onclick="scrollToEpisode('ep2')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">2화: 삼원색과 화학 금기</button>
+        <button onclick="scrollToEpisode('ep3')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">3화: 질문하는 과학</button>
+        <button onclick="scrollToEpisode('ep4')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">4화: 동선과 분업 릴레이</button>
+        <button onclick="scrollToEpisode('ep5')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">5화: 프레젠테이션</button>
+        <button onclick="scrollToEpisode('ep6')" class="bg-blue-950/50 hover:bg-blue-900 border border-blue-900/50 px-3 py-1.5 rounded-full text-blue-400 font-semibold whitespace-nowrap transition">최종화: 지존의 품격</button>
+    </nav>
+
+    <!-- AI 진행 바 -->
+    <div id="progress-board" class="bg-slate-900/90 border-b border-slate-800 px-4 py-3 sticky top-[95px] z-40 hidden">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-notch animate-spin text-red-500"></i>
+                <span id="progress-text" class="text-xs text-gray-300 font-semibold">AI가 웹툰을 그리는 중...</span>
+            </div>
+            <span id="progress-percent" class="text-xs font-bold text-red-400">0%</span>
+        </div>
+        <div class="max-w-md mx-auto mt-2 bg-black rounded-full h-1 overflow-hidden">
+            <div id="progress-bar" class="bg-gradient-to-r from-red-500 to-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- 타이틀 표지 -->
+    <section class="max-w-lg mx-auto py-12 px-4 text-center">
+        <div class="bg-gradient-to-b from-gray-950 via-slate-950 to-black border border-gray-900 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute -inset-10 bg-blue-900/10 rounded-full blur-3xl"></div>
+            <div class="relative z-10 flex flex-col items-center">
+                <span class="bg-blue-600/10 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-800/30 mb-4 tracking-widest">REAL MANHWA EDITION</span>
+                <h2 class="text-4xl font-black tracking-tight text-white mb-2 manhwa-title">
+                    청소의 지존 되기
+                </h2>
+                <p class="text-xs text-gray-500 tracking-wide mb-6">원작 콘티: KC&GREEN / 만화 작화: AI Imagen 4.0</p>
+                <div class="h-px w-20 bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+                <p class="text-xs text-gray-400 mt-4 leading-relaxed max-w-xs">
+                    "물때는 산성으로, 기름때는 알칼리로.<br>이것은 노동이 아닌 위대한 중화 과학이다."
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 웹툰 뷰어 핵심 영역 -->
+    <main id="webtoon-viewer" class="max-w-lg mx-auto bg-black min-h-screen py-10 flex flex-col">
+        <!-- Javascript가 이 영역에 모든 컷을 동적으로 그려냅니다. -->
+    </main>
+
+    <!-- 하단 풋터 및 안내 -->
+    <footer class="bg-black py-16 text-center border-t border-gray-950">
+        <p class="text-gray-600 text-xs">© 2026 KC&GREEN. All Rights Reserved.</p>
+        <p class="text-[10px] text-gray-800 mt-2">이 작품은 AI Generative Model을 사용해 실시간으로 컷이 렌더링되는 가변형 웹툰입니다.</p>
+    </footer>
+
+    <script>
+        // 사운드 상태 및 오디오 합성기 (Web Audio API)
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-green-500";
+                playSynthTone(600, 0.1);
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-gray-500";
+            }
+        }
+
+        // 간단한 효과음 합성기 생성
+        function playSynthTone(freq, duration, type = 'sine') {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play blocked/failed", e);
+            }
+        }
+
+        // 특수 신스음 (폭발/사자후 등)
+        function playDramaSound(style) {
+            if (!soundEnabled) return;
+            if (style === 'explode') {
+                playSynthTone(100, 0.8, 'sawtooth');
+                setTimeout(() => playSynthTone(60, 0.5, 'triangle'), 100);
+            } else if (style === 'clack') {
+                playSynthTone(800, 0.05, 'square');
+                setTimeout(() => playSynthTone(1000, 0.05, 'square'), 50);
+            } else if (style === 'slosh') {
+                playSynthTone(200, 0.3, 'sine');
+            } else if (style === 'flick') {
+                playSynthTone(1200, 0.1, 'sine');
+            }
+        }
+
+        // 전체 37개 웹툰 컷 상세 대본 데이터베이스 구축
+        const webtoonCuts = [
+            // ================= 1막 1화 =================
+            {
+                id: 1,
+                epId: "ep1",
+                episode: "1화: 위장 잠입",
+                title: "침투의 눈빛",
+                narrative: "실내 청소 전문업체 '클린 마스터즈'. 이 바닥의 정점을 찍은 놈들의 비밀을... 내가 전부 빼앗아 주지.",
+                soundEffect: "스으윽—",
+                soundStyle: "clack",
+                effectPos: "top-10 left-8 text-blue-500 text-3xl",
+                bubbles: [
+                    { speaker: "진우", dialogue: "후... 기어코 여기에 들어왔군. 이 바닥의 왕좌를 탈환하겠어.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of a handsome young Korean man with sharp eyes, dark short hair, wearing sleek silver wire glasses, looking extremely confident and holding a cleaning broom over his shoulder. Modern Korean webtoon style, Reborn Rich manhwa look, dark moody office hallway lighting, high-contrast digital illustration.",
+                placeholderGradient: "from-slate-950 via-blue-950 to-slate-900"
+            },
+            {
+                id: 2,
+                epId: "ep1",
+                episode: "1화: 위장 잠입",
+                title: "타노스의 오라",
+                soundEffect: "쿠구구구궁—!",
+                soundStyle: "explode",
+                effectPos: "top-16 right-8 text-red-600 text-4xl animate-pulse",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "야, 신참. 빗자루 들고 폼 잡는 건 네 일기장에나 쓰시지?", x: "bottom-16 right-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel of a huge, scary, muscular middle-aged Korean supervisor with veins popping on his forehead, wearing heavy red rubber cleaning gloves, casting a giant shadow behind a handsome young man with glasses. Dramatic red glow background, aggressive comic book style aura.",
+                placeholderGradient: "from-slate-950 via-red-950 to-slate-900"
+            },
+            {
+                id: 3,
+                epId: "ep1",
+                episode: "1화: 위장 잠입",
+                title: "건방진 도발",
+                soundEffect: "탁-!",
+                soundStyle: "clack",
+                effectPos: "bottom-32 left-10 text-yellow-500 text-3xl",
+                bubbles: [
+                    { speaker: "진우", dialogue: "흥, 까짓거 대충 독한 락스 들이붓고 수세미로 빡빡 문지르면 끝 아닙니까? 청소가 뭐 대수라고.", x: "bottom-8 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. A handsome arrogant Korean man with glasses kicking a white bleach container with his foot on a wet bathroom floor, looking down with a smirk. Reborn Rich manhwa art style, highly detailed shading.",
+                placeholderGradient: "from-slate-950 via-slate-900 to-slate-950"
+            },
+            {
+                id: 4,
+                epId: "ep1",
+                episode: "1화: 위장 잠입",
+                title: "약전 장전",
+                soundEffect: "찰칵-! 타닥-!",
+                soundStyle: "clack",
+                effectPos: "top-12 left-10 text-cyan-400 text-3xl animate-bounce",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "흐흐... 야, 신참. 너 오늘 내 손에 뒤지거나, 네 그 멍청한 대가리 때문에 뒤지거나 둘 중 하나다. 잘 봐라.", x: "bottom-10 right-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. A tough Korean cleaning master with a scary smile loading advanced blue and red chemical bottles (labeled KIEHL) onto his cleaning belt like a special forces soldier reloading bullet magazines. Cool dynamic action shot, speed lines background.",
+                placeholderGradient: "from-slate-950 via-zinc-900 to-blue-950"
+            },
+
+            // ================= 2막 2화 =================
+            {
+                id: 5,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "삼원색의 계시",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "청소 마스터의 첫 단계. 걸레의 삼원색이다. 머리에 박아둬라.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel of a cleaning master holding up three different colored microfiber towels: red, green, and white, floating dramatically in the air like the red and blue pills in The Matrix. High tension contrast, dark lighting.",
+                placeholderGradient: "from-slate-950 via-purple-950 to-slate-900"
+            },
+            {
+                id: 6,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "비급의 세분화",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "🔴 빨간색: 변기 전용!\n🟢 녹색: 세면대와 수전!\n⚪ 흰색: 유리와 거울!", x: "bottom-10 right-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon split panel showing three close-up panels. One shows a clean ceramic toilet bowl; one shows a sparkling chrome water faucet; one shows a crystal clear reflective mirror. Clean vector labels red green white overlay, webtoon design.",
+                placeholderGradient: "from-slate-900 via-gray-900 to-black"
+            },
+            {
+                id: 7,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "어리석은 선택",
+                soundEffect: "콸콸콸—!",
+                soundStyle: "slosh",
+                effectPos: "top-14 left-8 text-blue-400 text-3xl",
+                bubbles: [
+                    { speaker: "진우", dialogue: "아, 귀찮게 진짜... 일단 이것부터 지우고 소독하면 되죠? 락스 투하—!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Hands of a young man pouring clear bleach liquid from a plastic jug straight onto a dark brown stain inside a toilet bowl which already contains bubbling acidic blue cleaner. Dramatic splash effect.",
+                placeholderGradient: "from-slate-950 via-emerald-950 to-slate-950"
+            },
+            {
+                id: 8,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "기괴한 연기",
+                soundEffect: "치이이이이—",
+                soundStyle: "slosh",
+                effectPos: "top-12 right-12 text-green-500 text-3xl animate-pulse",
+                bubbles: [
+                    { speaker: "진우", dialogue: "어...? 원래 이렇게 연기가 나나...?", x: "bottom-16 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Dense toxic yellow-green smoke bubbling violently out of a porcelain toilet bowl, filling the small bathroom with a dangerous gas. The young man with glasses looks shocked and begins to cough. Dramatic comic atmosphere.",
+                placeholderGradient: "from-black via-emerald-900 to-black"
+            },
+            {
+                id: 9,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "황천길 배송",
+                soundEffect: "콰당탕—!!!",
+                soundStyle: "explode",
+                effectPos: "top-16 left-10 text-red-500 text-4xl",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "위험해, 이 바보 녀석아!!!", x: "bottom-20 right-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. A powerful muscular man grabbing the collar of a handsome young man with glasses and throwing him backward out of the bathroom door onto the hallway floor. Dynamic speed lines, motion blur, dramatic action pose.",
+                placeholderGradient: "from-slate-950 via-red-950 to-slate-950"
+            },
+            {
+                id: 10,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "자폭 사망 타이틀",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "야 이 미친X아!!! 너 진짜 황천길 급행열차 타고 내일 뉴스 사회면에 '독가스 자폭 사망'으로 뜨고 싶냐?!?", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. Angry Korean supervisor screaming with a distorted rage face, spit flying, with a dramatic background depicting skull symbols and nuclear hazard warning gas mask illustrations. Massive red flame aura.",
+                placeholderGradient: "from-black via-red-900 to-black"
+            },
+            {
+                id: 11,
+                epId: "ep2",
+                episode: "2화: 걸레의 삼원색과 화학의 금기",
+                title: "염소가스의 공포",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "산성 세제랑 염소계 락스가 만나면 염소가스($Cl_2$)가 뿜어져 나온다고! 폐포 다 녹아서 질식사하고 싶어?!", x: "bottom-24 left-6", tail: "bubble-tail-bottom", choi: true },
+                    { speaker: "진우", dialogue: '...지, 진짜 죽을 뻔했잖아...?!', x: "top-12 right-6", tail: "bubble-tail-top", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of a giant chalkboard showing chemical formula: Acid + Bleach = Cl2 Gas with scary red glowing gas molecules drawn on it. The handsome young man sits on the floor sweating and trembling with fear.",
+                placeholderGradient: "from-slate-950 via-zinc-900 to-slate-950"
+            },
+
+            // ================= 2막 3화 =================
+            {
+                id: 12,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "대리석 저격 조준",
+                bubbles: [
+                    { speaker: "진우", dialogue: "좋아, 이번엔 안전하게 산성 세제로 이 물때들을 조져주지...", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of a handsome young man with sharp glasses pointing an acidic spray nozzle toward a beautiful, luxurious gray natural marble countertop in a high-end washroom. Cool determined expression, dramatic shadow.",
+                placeholderGradient: "from-slate-950 via-slate-900 to-slate-950"
+            },
+            {
+                id: 13,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "손목의 경고",
+                soundEffect: "탓—! 꺾기—!",
+                soundStyle: "clack",
+                effectPos: "top-14 right-10 text-yellow-500 text-3xl animate-bounce",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "야, 이 바부시키야. 너 그 대리석에 그 산성세제 부으면 수백만 원 날아간다!!", x: "bottom-20 left-6", tail: "bubble-tail-bottom", choi: true },
+                    { speaker: "진우", dialogue: "윽! 아니, 물때는 산성으로 하라면서요?!", x: "top-12 right-6", tail: "bubble-tail-top", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Close-up of a rugged hand firmly grabbing and twisting the wrist of a young man with glasses who is holding a spray bottle. Pain reaction on the young man's face, dynamic kinetic lines.",
+                placeholderGradient: "from-slate-950 via-orange-950 to-slate-950"
+            },
+            {
+                id: 14,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "돌의 속사정",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "대리석은 알칼리성 석회질 덩어리다! 산성을 부으면 때만 녹는 게 아니라 돌 자체가 녹아서 하얗게 부식된다고!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel of a cleaning master tapping a stone surface with his thick finger. Overlay shows a glowing micro-diagram of acidic molecules burning and corroding a beautiful crystalline calcium structure of natural marble. Educational science overlay.",
+                placeholderGradient: "from-black via-zinc-850 to-black"
+            },
+            {
+                id: 15,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "분노의 철수세미",
+                bubbles: [
+                    { speaker: "진우", dialogue: "아오... 이 징한 것들! 그냥 거친 철수세미로 박박 긁어내 버릴까요?!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Angry handsome young man with messy hair holding a metal steel-scrubber, looking with frustration at a highly corroded, cloudy metal sink faucet that has white hard limescale stains. Intense expression.",
+                placeholderGradient: "from-slate-950 via-blue-950 to-slate-950"
+            },
+            {
+                id: 16,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "딱밤의 세례",
+                soundEffect: "딱—!",
+                soundStyle: "flick",
+                effectPos: "top-12 left-12 text-red-500 text-4xl animate-ping",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "야 이 바부시키야! 안 지워지면 긁어내기 전에 이 오염의 '성분'이 뭔지를 생각하라고!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. A tough old master flicking the forehead of a handsome young man with glasses with his index finger. Spark of impact, young man flinching with humorous pain, comedy webtoon style.",
+                placeholderGradient: "from-slate-950 via-red-950 to-slate-950"
+            },
+            {
+                id: 17,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "중화의 미학",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "오염의 성질을 파악해서, 그 반대 성향의 세제로 '중화'시켜 털어내는 게 청소 과학이다! 잘 적어라!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. An old cleaning master drawing a glowing neon chemical formula in the air with his finger, illustrating the neutralization process (acid canceling alkali). Glowing blue and orange particles, futuristic educational effect.",
+                placeholderGradient: "from-black via-indigo-950 to-black"
+            },
+            {
+                id: 18,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "청소 과학 저격법",
+                narrative: "🧱 알칼리 오염 (요석, 석회 물때) ➔ 산성 세제!\n🍖 산성 오염 (기름때, 사람 손때, 피지) ➔ 알칼리 세제!",
+                prompt: "Vertical webtoon panel. Split design chart with clean line drawings. Left showing a red brick labeled ALKALI being struck by blue lightning labeled ACID. Right showing a grease drop labeled ACID being crushed by orange fist labeled ALKALI. Graphic webtoon style.",
+                placeholderGradient: "from-slate-950 via-zinc-900 to-slate-950"
+            },
+            {
+                id: 19,
+                epId: "ep3",
+                episode: "3화: 왜? 라고 질문하는 과학",
+                title: "주방 후드 퀴즈",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "자, 질문! 기름때 찌든 주방 후드에 산성 세제 부으면 어떻게 될까?", x: "top-12 left-6", tail: "bubble-tail-top", choi: true },
+                    { speaker: "진우", dialogue: "산성과 산성이 만나니까... 사이좋게 아무 일도 안 일어납니다.", x: "bottom-12 right-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of a smart young Korean man with clean glasses smirking and pointing his finger confidently. In the background, a scary supervisor is looking highly impressed and grinning. Golden warm lighting.",
+                placeholderGradient: "from-slate-950 via-yellow-950 to-slate-950"
+            },
+
+            // ================= 2막 4화 =================
+            {
+                id: 20,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "풍수지리를 아는가",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "야... 너 지금 바닥 다 닦아놓고 그 위에서 환풍기 먼지를 털어내냐?! 풍수지리를 몰라?!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. A cleaning master clutching his forehead in exasperation while a young man stands on top of a toilet cleaning a ceiling ventilation fan with dust raining down on a clean polished wet floor. Comical face palm.",
+                placeholderGradient: "from-slate-950 via-orange-950 to-slate-950"
+            },
+            {
+                id: 21,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "풍수지리 3대 원칙",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "1. 위➔아래 (먼지는 떨어진다)\n2. 깨끗➔더러움 (배달 금지)\n3. 안➔밖 시계방향 (퇴로 확보!)", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. Infographic of a clean bathroom with glowing golden arrows pointing from the ceiling to the floor, showing a perfect clockwise path winding out of the room to the exit door. Tech blueprint overlay.",
+                placeholderGradient: "from-black via-blue-950 to-black"
+            },
+            {
+                id: 22,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "무모한 좀비 돌진",
+                soundEffect: "우당탕탕— 콰쾅—",
+                soundStyle: "explode",
+                effectPos: "top-14 left-8 text-red-500 text-3xl animate-bounce",
+                bubbles: [
+                    { speaker: "진우", dialogue: "으아아아! 내가 다 쓸어버리겠어!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. A young man running like a wild warrior into a massive cluttered public restroom holding a scrubber and a bucket. Water splashing everywhere, absolute chaotic dust storm, humorous battle stance.",
+                placeholderGradient: "from-slate-950 via-cyan-950 to-slate-950"
+            },
+            {
+                id: 23,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "호루라기 사자후",
+                soundEffect: "삐이이익—! 퍽—!",
+                soundStyle: "flick",
+                effectPos: "top-12 right-12 text-yellow-500 text-4xl animate-ping",
+                bubbles: [
+                    { speaker: "최 반장", dialogue: "스톱!!! 너 혼자 이 넓은 데를 다 헤집고 다니니까 엉망진창이지! 청소는 공장이다! '컨베이어 벨트 시스템' 가동한다!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: true }
+                ],
+                prompt: "Vertical webtoon panel. Old supervisor blowing a bright red plastic whistle loudly, with sound waves rippling through the air, giving a swift comical kick to the backside of a young man with glasses. Dynamic speed lines.",
+                placeholderGradient: "from-slate-950 via-red-950 to-slate-950"
+            },
+            {
+                id: 24,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "낭비 시간 제로",
+                narrative: "최 마스터즈 팀원들이 톱니바퀴 기어 레이아웃 속에서 완벽하게 분업화된 동작을 수행하는 연출.",
+                prompt: "Vertical webtoon panel showing 3 separate panels of professional cleaners with uniform vests moving perfectly like synchronized gears inside a massive abstract clockwork cog layout. Sleek high-tech comic design.",
+                placeholderGradient: "from-black via-zinc-900 to-black"
+            },
+            {
+                id: 25,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "컨베이어 5대 분업",
+                narrative: "1단계: 살포조 (3분) ➔ 2단계: 변기조 (변기 파괴) ➔ 3단계: 세면대조 (광택 스페셜) ➔ 4단계: 거울조 (S자 스퀴지 13초) ➔ 5단계: 바닥조 (시계 방향 마감)",
+                prompt: "Vertical webtoon panel. 5-stage sequential horizontal strip showing cleaners: one spraying liquid backpack style, one scrubing toilet with red cloth, one polishing water taps, one sweeping mirror S-shape, and one mopping floor, in neon green borders.",
+                placeholderGradient: "from-slate-950 via-emerald-950 to-slate-950"
+            },
+            {
+                id: 26,
+                epId: "ep4",
+                episode: "4화: 동선과 분업의 릴레이",
+                title: "공간을 지배하는 기계장치",
+                bubbles: [
+                    { speaker: "진우", dialogue: '이것이... 공간을 지배하는... 청소의 컨베이어 벨트 시스템...!', x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Close up of a handsome Korean young man's wide eyes behind glasses, in which glowing cyan blueprint layouts of interlocking gears and bathroom cleaning lines are perfectly reflected. Highly intelligent Reborn Rich look.",
+                placeholderGradient: "from-black via-blue-950 to-black"
+            },
+
+            // ================= 3막 5화 =================
+            {
+                id: 27,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "냉철한 거물의 눈빛",
+                bubbles: [
+                    { speaker: "디렉터", dialogue: "이번 콘서트는 VIP 귀빈들과 어린아이들이 대거 옵니다. 안전성과 위생, 완벽하게 보장할 수 있습니까?", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. A beautiful modern conference room of a creative agency. A cold-looking professional Korean entertainment director with folded arms staring sharply at a handsome young businessman in a tailor-made navy suit.",
+                placeholderGradient: "from-slate-950 via-slate-900 to-slate-950"
+            },
+            {
+                id: 28,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "맹수의 여유",
+                bubbles: [
+                    { speaker: "진우", dialogue: "디렉터님, 걱정하실 필요 전혀 없습니다. 저희는 독일 친환경 프리미엄 세제 '키엘(KIEHL)'만 사용하니까요.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. A handsome young CEO with silver glasses sitting elegantly at a high-end corporate glass table, holding a small porcelain teacup with a smooth confident smirk. Sharp intelligent gaze.",
+                placeholderGradient: "from-slate-950 via-zinc-900 to-slate-950"
+            },
+            {
+                id: 29,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "보이지 않는 안전",
+                bubbles: [
+                    { speaker: "진우", dialogue: "인체에 완전히 무해하게 설계되어 밀폐된 공간에서도 두통이나 눈 시림이 전혀 없습니다.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of beautifully designed luxury gold and dark-blue detergent bottles lined up inside a glowing crystalline display case, like high-end perfumes, labeled KIEHL in gold text. Elegant artistic style.",
+                placeholderGradient: "from-black via-blue-950 to-black"
+            },
+            {
+                id: 30,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "흔들리는 디렉터",
+                bubbles: [
+                    { speaker: "디렉터", dialogue: "오... 하지만 시간이 매우 촉박한데 신속성 부분은?", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Close-up on the sweat-dripping face of a middle-aged director with dilated pupils, looking incredibly stunned and surprised. Dramatic shadow, high tension.",
+                placeholderGradient: "from-slate-950 via-slate-900 to-slate-950"
+            },
+            {
+                id: 31,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "승부의 설계도",
+                bubbles: [
+                    { speaker: "진우", dialogue: "저희는 '공장형 컨베이어 벨트 분업 시스템'을 도입했습니다. 타사 대비 작업 속도가 40% 이상 빠릅니다.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Handsome young businessman sliding a thick high-end navy blueprint folder across a shiny glass conference table, showing a golden layout diagram of cleaning flows. Strong confidence.",
+                placeholderGradient: "from-slate-950 via-indigo-950 to-slate-950"
+            },
+            {
+                id: 32,
+                epId: "ep5",
+                episode: "5화: 프레젠테이션",
+                title: "계약의 만년필",
+                soundEffect: "탁—!",
+                soundStyle: "clack",
+                effectPos: "bottom-24 left-10 text-cyan-400 text-3xl",
+                bubbles: [
+                    { speaker: "디렉터", dialogue: "훌륭하군요. 기존 업체들과는 전문성의 깊이부터 다릅니다. 계약하죠.", x: "bottom-8 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Close-up of a premium gold fountain pen signing a crisp contract paper with a heavy circular red stamp. Liquid black ink splash, triumph webtoon illustration.",
+                placeholderGradient: "from-black via-emerald-950 to-black"
+            },
+
+            // ================= 에필로그 =================
+            {
+                id: 33,
+                epId: "ep6",
+                episode: "최종화: 지존의 품격",
+                title: "과학을 품은 공간",
+                narrative: "모든 물건들이 pH 지수와 자재 성질별로 완벽한 칼각을 맞춰 정리 정돈되어 있다.",
+                prompt: "Vertical webtoon panel of an ultra-sleek, clean, perfectly organized modern CEO office. Shelves containing sparkling clean cleaning supplies, books and files ordered like a master's library, beautiful warm desk lighting.",
+                placeholderGradient: "from-slate-950 via-slate-900 to-slate-950"
+            },
+            {
+                id: 34,
+                epId: "ep6",
+                episode: "최종화: 지존의 품격",
+                title: "어머니의 충격",
+                bubbles: [
+                    { speaker: "어머니", dialogue: "오메메... 진우야! 옷가지며 병이며 다 뒤엉켜놓던 놈이 와 이라노?! 여기가 니 방이 맞나?!", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of an elderly Korean mother dropping a small colorful food container on the floor, looking around a room with her mouth wide open in absolute shock. Humorous sweat drops on face.",
+                placeholderGradient: "from-slate-950 via-zinc-900 to-slate-950"
+            },
+            {
+                id: 35,
+                epId: "ep6",
+                episode: "최종화: 지존의 품격",
+                title: "등짝 수매시 사절",
+                bubbles: [
+                    { speaker: "진우", dialogue: "엄마, 딱딱한 알칼리는 산성, 기름진 산성은 알칼리. 청소는 '과학'이고, 섞어 쓰는 세제는 '독가스'입니다. 이제 등짝 스매시는 완벽히 사양할게요?", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel of a handsome young man with clean wire glasses putting a shiny glass squeegee on his leather belt pouch, smiling with a playful yet confident Do-jun-style smirk. Golden afternoon sunshine.",
+                placeholderGradient: "from-slate-950 via-yellow-950 to-slate-950"
+            },
+            {
+                id: 36,
+                epId: "ep6",
+                episode: "최종화: 지존의 품격",
+                title: "스승의 흐뭇한 미소",
+                narrative: "최 반장 (나레이션): '녀석... 제법 청소 맨이 되었군.'",
+                prompt: "Vertical webtoon panel of a rugged, muscular older Korean man in shadow, leaning on a corridor wall holding a warm aluminum canned coffee, watching a room and smiling warmly. Beautiful cinematic soft backlighting.",
+                placeholderGradient: "from-black via-zinc-950 to-black"
+            },
+            {
+                id: 37,
+                epId: "ep6",
+                episode: "최종화: 지존의 품격",
+                title: "공간을 구원하는 지존",
+                bubbles: [
+                    { speaker: "진우", dialogue: "당신의 공간은 안전하십니까? 이제, 클린 마스터가 지배합니다.", x: "bottom-12 left-6", tail: "bubble-tail-bottom", choi: false }
+                ],
+                prompt: "Vertical webtoon panel. Handsome Korean young businessman in a dark suit pointing his finger directly towards the camera with a brilliant glowing light reflecting from his glasses. Webtoon epic title logo background CLEAN MASTER.",
+                placeholderGradient: "from-black via-blue-950 to-black"
+            }
+        ];
+
+        // 뷰어 렌더링 엔진
+        function renderWebtoon() {
+            const container = document.getElementById('webtoon-viewer');
+            container.innerHTML = '';
+
+            let currentEpisode = '';
+
+            webtoonCuts.forEach((cut) => {
+                // 에피소드 구분선 삽입
+                if (cut.episode !== currentEpisode) {
+                    currentEpisode = cut.episode;
+                    const divider = document.createElement('div');
+                    divider.id = cut.epId;
+                    divider.className = "py-10 text-center flex flex-col items-center justify-center bg-black/60 relative border-y border-gray-950 my-12";
+                    divider.innerHTML = `
+                        <div class="absolute inset-0 bg-blue-900/5 blur-xl"></div>
+                        <span class="text-[10px] text-blue-500 font-bold tracking-[0.25em] uppercase mb-1">EPISODE</span>
+                        <h3 class="text-xl font-bold text-white manhwa-title tracking-tight px-6">${currentEpisode}</h3>
+                        <div class="h-0.5 w-16 bg-gradient-to-r from-transparent via-blue-800 to-transparent mt-3"></div>
+                    `;
+                    container.appendChild(divider);
+                }
+
+                // 개별 만화 패널 박스 생성
+                const panel = document.createElement('div');
+                panel.className = "panel-container relative px-4 py-8 flex flex-col items-center group";
+                panel.id = `panel-wrap-${cut.id}`;
+
+                // 나레이션 상단 박스
+                let narrativeTop = '';
+                if (cut.narrative) {
+                    narrativeTop = `
+                        <div class="narration-box mb-6 px-5 py-4 w-full max-w-[420px] rounded border border-gray-900/50 text-gray-400">
+                            ${cut.narrative.replace(/\n/g, '<br>')}
+                        </div>
+                    `;
+                }
+
+                // 말풍선 DOM 제작
+                let bubblesHTML = '';
+                if (cut.bubbles && cut.bubbles.length > 0) {
+                    cut.bubbles.forEach((b) => {
+                        const bubbleClass = b.choi ? 'bubble-choi' : '';
+                        bubblesHTML += `
+                            <div class="speech-bubble ${bubbleClass} ${b.tail} ${b.x}">
+                                ${b.dialogue.replace(/\n/g, '<br>')}
+                            </div>
+                        `;
+                    });
+                }
+
+                // 효과음 기포
+                let effectHTML = '';
+                if (cut.soundEffect) {
+                    effectHTML = `
+                        <div class="effect-sound absolute ${cut.effectPos}">
+                            ${cut.soundEffect}
+                        </div>
+                    `;
+                }
+
+                panel.innerHTML = `
+                    ${narrativeTop}
+                    
+                    <!-- 실제 작화 영역 -->
+                    <div class="relative w-full aspect-[3/4] max-w-[420px] bg-gradient-to-b ${cut.placeholderGradient} rounded-2xl overflow-hidden border border-gray-900 shadow-[0_15px_40px_rgba(0,0,0,0.8)] transition duration-500 group-hover:border-blue-900/30">
+                        <!-- AI로 그려질 이미지 태그 -->
+                       <img id="img-panel-${cut.id}" class="w-full h-full object-cover opacity-100 transition duration-1000" src="images/${cut.id}.png" alt="${cut.title}">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90 pointer-events-none"></div>
+
+                        <!-- 컷 효과음 및 말풍선 레이어 -->
+                        ${effectHTML}
+                        ${bubblesHTML}
+
+                        <!-- 로딩 스피너 -->
+                        <div id="loader-panel-${cut.id}" class="absolute inset-0 flex flex-col items-center justify-center bg-black/85 hidden z-20">
+                            <i class="fa-solid fa-wand-magic-sparkles animate-spin text-3xl text-red-500 mb-3"></i>
+                            <span class="text-xs text-red-400 font-bold tracking-wider">AI가 고화질 웹툰을 드로잉 중...</span>
+                        </div>
+
+                        <!-- 개별 재생성 오버레이 버튼 -->
+                        <div class="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="regeneratePanel(${cut.id})" class="bg-black/80 hover:bg-red-950 border border-red-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-arrows-rotate animate-spin-hover"></i> 이 컷만 AI 작화
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 컷 미세 설명자 -->
+                    <div class="w-full max-w-[420px] mt-3 flex justify-between items-center text-[10px] text-gray-600 px-1">
+                        <span>Cut #${cut.id} : ${cut.title}</span>
+                        <span class="hover:text-blue-500 cursor-pointer" onclick="regeneratePanel(${cut.id})">AI 드로잉 트리거</span>
+                    </div>
+                `;
+
+                container.appendChild(panel);
+
+                // 컷간 마감 그라데이션 여백 추가
+                const gap = document.createElement('div');
+                gap.className = "cut-gap";
+                container.appendChild(gap);
+            });
+        }
+
+        // 특정 에피소드로 즉시 스크롤 스킵
+        function scrollToEpisode(epId) {
+            const target = document.getElementById(epId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                playSynthTone(500, 0.1);
+            }
+        }
+
+        // 개별 패널 이미지 생성 요청 (지수 백오프 지원)
+        async function generatePanelImage(panelId) {
+            const imgElement = document.getElementById(`img-panel-${panelId}`);
+            const loader = document.getElementById(`loader-panel-${panelId}`);
+            
+            if (loader) loader.classList.remove('hidden');
+
+            const cut = webtoonCuts.find(c => c.id === panelId);
+            if (!cut) return false;
+
+            const apiKey = ""; // Canvas 런타임에 자동 매핑됩니다.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+            const payload = {
+                instances: [{ prompt: cut.prompt }],
+                parameters: {
+                    sampleCount: 1
+                }
+            };
+
+            let delay = 1000;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const result = await response.json();
+                    const base64Encoded = result?.predictions?.[0]?.bytesBase64Encoded;
+
+                    if (base64Encoded) {
+                        imgElement.src = `data:image/png;base64,${base64Encoded}`;
+                        imgElement.classList.remove('opacity-30', 'blur-[2px]');
+                        imgElement.classList.add('opacity-100');
+                        
+                        // 사운드 이펙트
+                        playDramaSound(cut.soundStyle || 'clack');
+                        
+                        if (loader) loader.classList.add('hidden');
+                        return true;
+                    }
+                } catch (err) {
+                    console.debug(`[Cut ${panelId} Attempt ${attempt+1}]`, err);
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+
+            if (loader) loader.classList.add('hidden');
+            return false;
+        }
+
+        // 특정 패널 단독 재생성
+        async function regeneratePanel(panelId) {
+            await generatePanelImage(panelId);
+        }
+
+        // 전체 37개 패널 자동 연속 드로잉 시스템
+        async function startGlobalGeneration() {
+            const globalBtn = document.getElementById('global-gen-btn');
+            const progressBoard = document.getElementById('progress-board');
+            
+            globalBtn.disabled = true;
+            globalBtn.classList.add('opacity-50');
+            progressBoard.classList.remove('hidden');
+
+            const total = webtoonCuts.length;
+            let success = 0;
+
+            for (let i = 0; i < total; i++) {
+                const cut = webtoonCuts[i];
+                const percent = Math.round((i / total) * 100);
+                
+                // 진행 정보 업데이트
+                document.getElementById('progress-text').innerText = `[${i+1}/${total}] '${cut.title}' 드로잉 중...`;
+                document.getElementById('progress-percent').innerText = `${percent}%`;
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+                
+                // 뷰포트 이동
+                const el = document.getElementById(`panel-wrap-${cut.id}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                const isSuccess = await generatePanelImage(cut.id);
+                if (isSuccess) success++;
+
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+
+            // 완료 마감
+            document.getElementById('progress-text').innerText = `지존 작화 완성! (성공: ${success}/${total})`;
+            document.getElementById('progress-percent').innerText = `100%`;
+            document.getElementById('progress-bar').style.width = `100%`;
+            playSynthTone(800, 0.4);
+
+            setTimeout(() => {
+                progressBoard.classList.add('hidden');
+                globalBtn.disabled = false;
+                globalBtn.classList.remove('opacity-50');
+            }, 5000);
+        }
+
+        // 초기 시작
+        window.addEventListener('DOMContentLoaded', () => {
+            renderWebtoon();
+        });
+    </script>
+</body>
+</html>
